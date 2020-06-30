@@ -1,5 +1,7 @@
 # HyperMinSketch
 
+![Build Status](https://travis-ci.org/mibarg/hyperminhash.svg?branch=master)
+
 Besides being a compact and pretty speedy HyperLogLog implementation for cardinality counting, this modified HyperLogLog allows **intersection** and **similarity** estimation of different HyperLogLogs.
 
 This repository is a naive Python>=3.6 port of golang [hyperminhash](https://github.com/axiomhq/hyperminhash).
