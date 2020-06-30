@@ -3,7 +3,7 @@ from typing import Dict
 import numpy as np
 import string
 
-from hyperminhash import Register, m, reg_sum_and_zeros, Sketch
+from hyperminhash import Register, m, reg_sum_and_zeros, HyperMinHash
 
 
 def estimate_error(got, exp: int) -> float:
@@ -42,7 +42,7 @@ def test_all_zeros(exp: float = 16384.0):
 
 
 def test_cardinality(step_init: int = 10000, iters: int = 1000000):
-	sk = Sketch()
+	sk = HyperMinHash()
 	step = step_init
 	unique = set()
 
@@ -62,8 +62,8 @@ def test_cardinality(step_init: int = 10000, iters: int = 1000000):
 
 
 def test_merge(iters: int = 3500000):
-	sk1 = Sketch()
-	sk2 = Sketch()
+	sk1 = HyperMinHash()
+	sk2 = HyperMinHash()
 	unique = set()
 
 	for _ in range(iters):
@@ -85,8 +85,8 @@ def test_merge(iters: int = 3500000):
 def test_intersection(iters: int = 20, k: int = 1000000):
 
 	for j in range(1, iters + 1):
-		sk1 = Sketch()
-		sk2 = Sketch()
+		sk1 = HyperMinHash()
+		sk2 = HyperMinHash()
 		unique: Dict[str, int] = {}
 
 		frac = np.float64(j) / np.float64(iters)
@@ -116,8 +116,8 @@ def test_intersection(iters: int = 20, k: int = 1000000):
 
 
 def test_no_intersection(iters1: int = 1000000, iters2: int = 2000000):
-	sk1 = Sketch()
-	sk2 = Sketch()
+	sk1 = HyperMinHash()
+	sk2 = HyperMinHash()
 
 	for i in range(iters1):
 		st = str(i)
