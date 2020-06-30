@@ -1,7 +1,5 @@
 from typing import Dict
 
-import pytest
-
 import numpy as np
 
 from hyperminhash import Register, m, reg_sum_and_zeros, Sketch
