@@ -1,1 +1,2 @@
 metrohash-python
+pytest
