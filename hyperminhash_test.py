@@ -1,5 +1,7 @@
 from typing import Dict
 
+import pytest
+
 import numpy as np
 import string
 
@@ -64,13 +66,12 @@ def test_cardinality(step_init: int = 10000, iters: int = 1000000):
 
 		print(f"PASS iter {i}.")
 
-
-def test_merge(iters: int = 3500000):
+def test_merge(num_items: int = 3500000):
 	sk1 = HyperMinHash()
 	sk2 = HyperMinHash()
 	unique = set()
 
-	for _ in range(iters):
+	for _ in range(num_items):
 		for sk in (sk1, sk2):
 			st = rnd_str(32)
 			b = str.encode(st)
@@ -123,18 +124,18 @@ def test_intersection(iters: int = 20, k: int = 1000000):
 		print(f"PASS iter {j}.")
 
 
-def test_no_intersection(iters1: int = 1000000, iters2: int = 2000000):
+def test_no_intersection(num_items1: int = 1000000, num_items2: int = 2000000):
 	sk1 = HyperMinHash()
 	sk2 = HyperMinHash()
 
-	for i in range(iters1):
+	for i in range(num_items1):
 		st = str(i)
 		b = str.encode(st)
 		sk1.add(b)
 
 	print("Populated sketch 1")
 
-	for i in range(iters1, iters2):
+	for i in range(num_items1, num_items2):
 		st = str(i)
 		b = str.encode(st)
 		sk2.add(b)
