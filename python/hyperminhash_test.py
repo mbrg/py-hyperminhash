@@ -87,7 +87,7 @@ def test_intersection(iters: int = 20, k: int = 1000000):
 	for j in range(1, iters + 1):
 		sk1 = Sketch()
 		sk2 = Sketch()
-		unique: Dict[str, bool] = {}
+		unique: Dict[str, int] = {}
 
 		frac = np.float64(j) / np.float64(iters)
 
@@ -95,13 +95,13 @@ def test_intersection(iters: int = 20, k: int = 1000000):
 			st = str(i)
 			b = str.encode(st)
 			sk1.add(b)
-			unique[st] += 1
+			unique[st] = unique.get(st, 0) + 1
 
 		for i in range(int(np.float64(k) * frac), 2 * k):
 			st = str(i)
 			b = str.encode(st)
 			sk2.add(b)
-			unique[st] += 1
+			unique[st] = unique.get(st, 0) + 1
 
 		col = 0
 		for count in unique.values():
