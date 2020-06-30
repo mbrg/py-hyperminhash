@@ -43,12 +43,16 @@ def beta(ez: np.float64) -> np.float64:
 
 
 class Register:
-    def __init__(self, lz: np.uint8 = 0, sig: np.uint16 = 0, *args, **kwargs):
-        val = (np.uint16(lz) << r) | sig
+    def __init__(self, val: 0, *args, **kwargs):
         self.val = np.uint16(val, *args, **kwargs)
 
+    @classmethod
+    def from_tuple(cls, lz: np.uint8 = 0, sig: np.uint16 = 0, *args, **kwargs):
+        val = (np.uint16(lz) << r) | sig
+        return Register(val, *args, **kwargs)
+
     def lz(self) -> np.uint8:
-        return np.uint8(np.uint16(self) >> (16 - q))
+        return np.uint8(np.uint16(self.val) >> (16 - q))
 
     def __str__(self):
         return self.val.__str__()
@@ -133,7 +137,7 @@ class Sketch:
         k = x >> np.uint(max)
         lz = np.uint8(leading_zeros64((x << p) ^ maxX)) + 1
         sig = np.uint16(y << (64 - r) >> (64 - r))
-        reg = Register(lz, sig)
+        reg = Register.from_tuple(lz, sig)
         if self.reg[k] is None or self.reg[k] < reg:
             self.reg[k] = reg
 
