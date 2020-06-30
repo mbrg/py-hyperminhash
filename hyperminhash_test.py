@@ -17,7 +17,7 @@ def estimate_error(got, exp: int) -> float:
 
 
 def rnd_str(size: int):
-	arr = np.random.choice(string.ascii_letters, size)
+	arr = np.random.choice([_ for _ in string.ascii_letters], size)
 	return "".join(list(arr))
 
 
