@@ -29,3 +29,10 @@ def test_zeros(ln: int = m):
 
 	assert got == exp, f"expected {exp:.2f}, got {got:.2f}"
 
+
+def test_all_zeros():
+	registers = [Register() for _ in range(m)]
+	exp = 16384.0
+
+	_, got = reg_sum_and_zeros(registers)
+	assert got == exp, f"expected {exp:.2f}, got {got:.2f}"
