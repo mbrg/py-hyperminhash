@@ -139,10 +139,15 @@ class HyperMinHash:
         if self.reg[k] is None or self.reg[k] < reg:
             self.reg[k] = reg
 
-    def add(self, value: bytes) -> None:
+    def add(self, value: Union[bytes, str, int]) -> None:
         """
         Add inserts a value into the sketch
         """
+        if isinstance(value, int):
+            value = str(value)
+        if isinstance(value, str):
+            value = str.encode(value)
+
         h1, h2 = metro_hash_128(value, 1337)
         self.add_hash(h1, h2)
 
