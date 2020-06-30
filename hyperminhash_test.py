@@ -48,7 +48,7 @@ def test_cardinality(step_init: int = 10000, iters: int = 1000000):
 	step = step_init
 	unique = set()
 
-	for _ in range(iters):
+	for i in range(iters):
 		st = rnd_str(32)
 		b = str.encode(st)
 		sk.add(b)
@@ -62,6 +62,8 @@ def test_cardinality(step_init: int = 10000, iters: int = 1000000):
 			ratio = estimate_error(res, exact)
 			assert ratio <= 2, f"Exact {exact}, got {res} which is {ratio:.2f} error. String: {st}."
 
+		print(f"PASS iter {i}.")
+
 
 def test_merge(iters: int = 3500000):
 	sk1 = HyperMinHash()
@@ -74,6 +76,8 @@ def test_merge(iters: int = 3500000):
 			b = str.encode(st)
 			sk.add(b)
 			unique.add(st)
+
+	print("Populated sketches")
 
 	for _sk1, _sk2 in ((sk1, sk2), (sk2, sk1)):
 		msk = _sk1.merge(_sk2)
@@ -116,6 +120,8 @@ def test_intersection(iters: int = 20, k: int = 1000000):
 		ratio = estimate_error(res, exact)
 		assert ratio <= 100, f"Exact {exact}, got {res} which is {ratio:.2f} error."
 
+		print(f"PASS iter {j}.")
+
 
 def test_no_intersection(iters1: int = 1000000, iters2: int = 2000000):
 	sk1 = HyperMinHash()
@@ -126,10 +132,14 @@ def test_no_intersection(iters1: int = 1000000, iters2: int = 2000000):
 		b = str.encode(st)
 		sk1.add(b)
 
+	print("Populated sketch 1")
+
 	for i in range(iters1, iters2):
 		st = str(i)
 		b = str.encode(st)
 		sk2.add(b)
+
+	print("Populated sketch 2")
 
 	got = sk1.intersection(sk2)
 	assert got == 0, f"Expected no intersection, got {got}."
