@@ -24,8 +24,11 @@ c = 0.169919487159739093975315012348
 def metro_hash_128(val: bytes, seed: int):
     h: bytes = metrohash.metrohash128(val, seed)
 
-    h1 = np.uint64(int.from_bytes(h, byteorder="little", signed=False))
-    h2 = np.uint64(int.from_bytes(h[8:], byteorder="little", signed=False))
+    h1 = int.from_bytes(h, byteorder="little", signed=False)
+    h2 = int.from_bytes(h[8:], byteorder="little", signed=False)
+
+    h1 = np.uint64(h1 % np.iinfo(np.uint64).max)
+    h2 = np.uint64(h2 % np.iinfo(np.uint64).max)
 
     return h1, h2
 
@@ -97,14 +100,13 @@ class Register:
         return isinstance(other, Register) and self.val.__sub__(other.val)
 
 
-def leading_zeros64(x: np.uint64) -> int:
+def leading_zeros64(x: np.uint64, num_bits: int = 64) -> int:
     """
     LeadingZeros64 returns the number of leading zero bits in x; the result is 64 for x == 0.
     """
-    total_bits = 64
     res = 0
-    while (x & (1 << (total_bits - 1))) == 0:
-        x = (x << 1)
+    while (x & (np.uint64(1) << (np.uint64(num_bits) - np.uint64(1)))) == 0:
+        x = (x << np.uint64(1))
         res += 1
 
     return res
@@ -134,9 +136,10 @@ class Sketch:
         """
         AddHash takes in a "hashed" value (bring your own hashing)
         """
-        k = x >> np.uint(max)
-        lz = np.uint8(leading_zeros64((x << p) ^ maxX)) + 1
-        sig = np.uint16(y << (64 - r) >> (64 - r))
+        k = x >> np.uint32(max)
+        lz = np.uint8(leading_zeros64((x << np.uint64(p)) ^ np.uint64(maxX))) + 1
+        sig = y << (np.uint64(64) - np.uint64(r)) >> (np.uint64(64) - np.uint64(r))
+        sig = np.uint16(sig % np.iinfo(np.uint16).max)
         reg = Register.from_tuple(lz, sig)
         if self.reg[k] is None or self.reg[k] < reg:
             self.reg[k] = reg
