@@ -1,11 +1,9 @@
 from typing import Dict
 
 import numpy as np
+import string
 
 from hyperminhash import Register, m, reg_sum_and_zeros, Sketch
-
-
-LETTER_BYTES = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
 def estimate_error(got, exp: int) -> float:
@@ -18,9 +16,13 @@ def estimate_error(got, exp: int) -> float:
 	return 100 * delta / exp
 
 
-def test_zeros(ln: int = m):
+def rnd_str(size: int):
+	arr = np.random.choice(string.ascii_letters, size)
+	return "".join(list(arr))
+
+
+def test_zeros(ln: int = m, exp: float = 0.0):
 	registers = []
-	exp = 0.0
 
 	for i in range(ln):
 		val = Register(np.random.randint(0, np.iinfo(np.uint16).max))
@@ -32,17 +34,11 @@ def test_zeros(ln: int = m):
 	assert got == exp, f"expected {exp:.2f}, got {got:.2f}"
 
 
-def test_all_zeros():
+def test_all_zeros(exp: float = 16384.0):
 	registers = [Register() for _ in range(m)]
-	exp = 16384.0
 
 	_, got = reg_sum_and_zeros(registers)
 	assert got == exp, f"expected {exp:.2f}, got {got:.2f}"
-
-
-def rand_string_bytes_mask_impr_src(n: np.uint32) -> str:
-	return "".join(
-		[LETTER_BYTES[np.random.randint(0, len(LETTER_BYTES))] for _ in range(n)])
 
 
 def test_cardinality():
@@ -51,7 +47,7 @@ def test_cardinality():
 	unique: Dict[str, bool] = {}
 
 	for _ in range(1000000):
-		st = rand_string_bytes_mask_impr_src(np.uint32(np.random.randint(0, 32)))
+		st = rnd_str(32)
 		b = str.encode(st)
 		sk.add(b)
 		unique[st] = True
@@ -72,7 +68,7 @@ def test_merge():
 
 	for _ in range(3500000):
 		for sk in (sk1, sk2):
-			st = rand_string_bytes_mask_impr_src(np.uint32(np.random.randint(0, 32)))
+			st = rnd_str(32)
 			b = str.encode(st)
 			sk.add(b)
 			unique[st] = True
