@@ -7,6 +7,8 @@ from hyperminhash import Register, m, reg_sum_and_zeros, HyperMinHash
 
 
 def estimate_error(got, exp: int) -> float:
+	if got == exp == 0:
+		return 0.0
 
 	if got > exp:
 		delta = got - exp
