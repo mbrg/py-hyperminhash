@@ -41,12 +41,12 @@ def test_all_zeros(exp: float = 16384.0):
 	assert got == exp, f"expected {exp:.2f}, got {got:.2f}"
 
 
-def test_cardinality():
+def test_cardinality(step_init: int = 10000, iters: int = 1000000):
 	sk = Sketch()
-	step = 10000
+	step = step_init
 	unique: Dict[str, bool] = {}
 
-	for _ in range(1000000):
+	for _ in range(iters):
 		st = rnd_str(32)
 		b = str.encode(st)
 		sk.add(b)
@@ -61,12 +61,12 @@ def test_cardinality():
 			assert ratio <= 2, f"Exact {exact}, got {res} which is {ratio:.2f} error. String: {st}."
 
 
-def test_merge():
+def test_merge(iters: int = 3500000):
 	sk1 = Sketch()
 	sk2 = Sketch()
 	unique: Dict[str, bool] = {}
 
-	for _ in range(3500000):
+	for _ in range(iters):
 		for sk in (sk1, sk2):
 			st = rnd_str(32)
 			b = str.encode(st)
@@ -82,9 +82,7 @@ def test_merge():
 		assert ratio <= 2, f"Exact {exact}, got {res} which is {ratio:.2f} error."
 
 
-def test_intersection():
-	iters = 20
-	k = 1000000
+def test_intersection(iters: int = 20, k: int = 1000000):
 
 	for j in range(1, iters + 1):
 		sk1 = Sketch()
@@ -117,16 +115,16 @@ def test_intersection():
 		assert ratio <= 100, f"Exact {exact}, got {res} which is {ratio:.2f} error."
 
 
-def test_no_intersection():
+def test_no_intersection(iters1: int = 1000000, iters2: int = 2000000):
 	sk1 = Sketch()
 	sk2 = Sketch()
 
-	for i in range(1000000):
+	for i in range(iters1):
 		st = str(i)
 		b = str.encode(st)
 		sk1.add(b)
 
-	for i in range(1000000, 2000000):
+	for i in range(iters1, iters2):
 		st = str(i)
 		b = str.encode(st)
 		sk2.add(b)
