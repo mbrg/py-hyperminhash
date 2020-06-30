@@ -66,6 +66,7 @@ def test_cardinality(step_init: int = 10000, iters: int = 1000000):
 
 		print(f"PASS iter {i}.")
 
+
 def test_merge(num_items: int = 3500000):
 	sk1 = HyperMinHash()
 	sk2 = HyperMinHash()
