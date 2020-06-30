@@ -89,39 +89,39 @@ def test_merge(num_items: int = 3500000):
 		assert ratio <= 2, f"Exact {exact}, got {res} which is {ratio:.2f} error."
 
 
-def test_intersection(iters: int = 20, k: int = 1000000):
+@pytest.mark.parametrize("j", range(1, 21))
+def test_intersection(j, k: int = 1000000):
 
-	for j in range(1, iters + 1):
-		sk1 = HyperMinHash()
-		sk2 = HyperMinHash()
-		unique: Dict[str, int] = {}
+	sk1 = HyperMinHash()
+	sk2 = HyperMinHash()
+	unique: Dict[str, int] = {}
 
-		frac = np.float64(j) / np.float64(iters)
+	frac = np.float64(j) / np.float64(20)
 
-		for i in range(k):
-			st = str(i)
-			b = str.encode(st)
-			sk1.add(b)
-			unique[st] = unique.get(st, 0) + 1
+	for i in range(k):
+		st = str(i)
+		b = str.encode(st)
+		sk1.add(b)
+		unique[st] = unique.get(st, 0) + 1
 
-		for i in range(int(np.float64(k) * frac), 2 * k):
-			st = str(i)
-			b = str.encode(st)
-			sk2.add(b)
-			unique[st] = unique.get(st, 0) + 1
+	for i in range(int(np.float64(k) * frac), 2 * k):
+		st = str(i)
+		b = str.encode(st)
+		sk2.add(b)
+		unique[st] = unique.get(st, 0) + 1
 
-		col = 0
-		for count in unique.values():
-			if count > 1:
-				col += 1
+	col = 0
+	for count in unique.values():
+		if count > 1:
+			col += 1
 
-		exact = np.uint64(k - int(np.float64(k) * frac))
-		res = sk1.intersection(sk2)
+	exact = np.uint64(k - int(np.float64(k) * frac))
+	res = sk1.intersection(sk2)
 
-		ratio = estimate_error(res, exact)
-		assert ratio <= 100, f"Exact {exact}, got {res} which is {ratio:.2f} error."
+	ratio = estimate_error(res, exact)
+	assert ratio <= 100, f"Exact {exact}, got {res} which is {ratio:.2f} error."
 
-		print(f"PASS iter {j}.")
+	print(f"PASS iter {j}.")
 
 
 def test_no_intersection(num_items1: int = 1000000, num_items2: int = 2000000):
