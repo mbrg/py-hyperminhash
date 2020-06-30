@@ -43,7 +43,7 @@ def beta(ez: np.float64) -> np.float64:
 
 
 class Register:
-    def __init__(self, val: 0, *args, **kwargs):
+    def __init__(self, val: int = 0, *args, **kwargs):
         self.val = np.uint16(val, *args, **kwargs)
 
     @classmethod
