@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import numpy as np
 
@@ -120,9 +120,9 @@ def reg_sum_and_zeros(registers: List[Register]) -> Tuple[np.float64, np.float64
     return sm, ez
 
 
-class Sketch:
+class HyperMinHash:
     """
-    Sketch is a sketch for cardinality estimation based on LogLog counting
+    HyperMinHash is a sketch for cardinality estimation based on LogLog counting
     """
     def __init__(self, ln: int = m):
         self.reg = [Register() for _ in range(ln)]
@@ -153,7 +153,10 @@ class Sketch:
         sm, ez = reg_sum_and_zeros(self.reg)
         return np.uint64(alpha * np.float64(m) * (np.float64(m) - ez) / (beta(ez) + sm))
 
-    def merge(self, other: "Sketch") -> "Sketch":
+    def __len__(self):
+        return int(self.cardinality())
+
+    def merge(self, other: "HyperMinHash") -> "HyperMinHash":
         """
         Merge returns a new union sketch of both sk and other
         """
@@ -166,7 +169,7 @@ class Sketch:
 
         return self
 
-    def similarity(self, other: "Sketch") -> np.float64:
+    def similarity(self, other: "HyperMinHash") -> np.float64:
         """
         Similarity return a Jaccard Index similarity estimation
         """
@@ -223,7 +226,7 @@ class Sketch:
 
         return (x * np.float64(p)) + 0.5
 
-    def intersection(self, other: "Sketch") -> np.uint64:
+    def intersection(self, other: "HyperMinHash") -> np.uint64:
         """
         Intersection returns number of intersections between sk and other
         """
