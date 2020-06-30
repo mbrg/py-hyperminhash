@@ -44,13 +44,13 @@ def test_all_zeros(exp: float = 16384.0):
 def test_cardinality(step_init: int = 10000, iters: int = 1000000):
 	sk = Sketch()
 	step = step_init
-	unique: Dict[str, bool] = {}
+	unique = set()
 
 	for _ in range(iters):
 		st = rnd_str(32)
 		b = str.encode(st)
 		sk.add(b)
-		unique[st] = True
+		unique.add(st)
 
 		if len(unique) % step == 0:
 			exact = np.uint64(len(unique))
@@ -64,14 +64,14 @@ def test_cardinality(step_init: int = 10000, iters: int = 1000000):
 def test_merge(iters: int = 3500000):
 	sk1 = Sketch()
 	sk2 = Sketch()
-	unique: Dict[str, bool] = {}
+	unique = set()
 
 	for _ in range(iters):
 		for sk in (sk1, sk2):
 			st = rnd_str(32)
 			b = str.encode(st)
 			sk.add(b)
-			unique[st] = True
+			unique.add(st)
 
 	for _sk1, _sk2 in ((sk1, sk2), (sk2, sk1)):
 		msk = _sk1.merge(_sk2)
