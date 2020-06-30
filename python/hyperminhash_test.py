@@ -15,7 +15,7 @@ def estimate_error(got, exp: int) -> float:
 	else:
 		delta = exp - got
 
-	return delta / exp
+	return 100 * delta / exp
 
 
 def test_zeros(ln: int = m):
@@ -61,7 +61,7 @@ def test_cardinality():
 			res = np.uint64(sk.cardinality())
 			step *= 10
 
-			ratio = 100 * estimate_error(res, exact)
+			ratio = estimate_error(res, exact)
 			assert ratio <= 2, f"Exact {exact}, got {res} which is {ratio:.2f} error. String: {st}."
 
 
@@ -82,7 +82,7 @@ def test_merge():
 		exact = np.uint64(len(unique))
 		res = msk.cardinality()
 
-		ratio = 100 * estimate_error(res, exact)
+		ratio = estimate_error(res, exact)
 		assert ratio <= 2, f"Exact {exact}, got {res} which is {ratio:.2f} error."
 
 
@@ -117,7 +117,7 @@ def test_intersection():
 		exact = np.uint64(k - int(np.float64(k) * frac))
 		res = sk1.intersection(sk2)
 
-		ratio = 100 * estimate_error(res, exact)
+		ratio = estimate_error(res, exact)
 		assert ratio <= 100, f"Exact {exact}, got {res} which is {ratio:.2f} error."
 
 
