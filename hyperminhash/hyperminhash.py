@@ -7,53 +7,17 @@ import metrohash
 import logging
 
 
-p = 14
-m = np.uint32(1 << p)  # 16384
-max = 64 - p
-maxX = np.iinfo(np.uint64).max >> max
-alpha = 0.7213 / (1 + 1.079 / np.float64(m))
-q = 6  # the number of bits for the LogLog hash
-r = 10  # number of bits for the bbit hash
-_2q = 1 << q
-_2r = 1 << r
-c = 0.169919487159739093975315012348
-
-
-def metro_hash_128(val: bytes, seed: int):
-    h: bytes = metrohash.metrohash128(val, seed)
-
-    h1 = int.from_bytes(h, byteorder="little", signed=False)
-    h2 = int.from_bytes(h[8:], byteorder="little", signed=False)
-
-    h1 = np.uint64(h1 % np.iinfo(np.uint64).max)
-    h2 = np.uint64(h2 % np.iinfo(np.uint64).max)
-
-    return h1, h2
-
-
-def leading_zeros64(x: np.uint64, num_bits: int = 64) -> int:
-    """
-    LeadingZeros64 returns the number of leading zero bits in x; the result is 64 for x == 0.
-    """
-    res = 0
-    while (x & (np.uint64(1) << (np.uint64(num_bits) - np.uint64(1)))) == 0:
-        x = (x << np.uint64(1))
-        res += 1
-
-    return res
-
-
-class Register:
+class _Register:
     def __init__(self, val: int = 0, *args, **kwargs):
         logging.debug(f"New Register({val}).")
         self.val = np.uint16(val, *args, **kwargs)
 
-    @classmethod
-    def from_tuple(cls, lz: np.uint8 = 0, sig: np.uint16 = 0, *args, **kwargs):
+    @staticmethod
+    def from_tuple(lz: np.uint8, sig: np.uint16, r: int, *args, **kwargs):
         val = (np.uint16(lz) << r) | sig
-        return Register(val, *args, **kwargs)
+        return _Register(val, *args, **kwargs)
 
-    def lz(self) -> np.uint8:
+    def lz(self, q: int) -> np.uint8:
         return np.uint8(np.uint16(self.val) >> (16 - q))
 
     def __str__(self):
@@ -63,59 +27,119 @@ class Register:
         return self.val.__repr__()
 
     def __eq__(self, other):
-        return isinstance(other, Register) and self.val.__eq__(other.val)
+        return isinstance(other, _Register) and self.val.__eq__(other.val)
 
     def __ge__(self, other):
-        return isinstance(other, Register) and self.val.__ge__(other.val)
+        return isinstance(other, _Register) and self.val.__ge__(other.val)
 
     def __le__(self, other):
-        return isinstance(other, Register) and self.val.__le__(other.val)
+        return isinstance(other, _Register) and self.val.__le__(other.val)
 
     def __gt__(self, other):
-        return isinstance(other, Register) and self.val.__gt__(other.val)
+        return isinstance(other, _Register) and self.val.__gt__(other.val)
 
     def __lt__(self, other):
-        return isinstance(other, Register) and self.val.__lt__(other.val)
+        return isinstance(other, _Register) and self.val.__lt__(other.val)
 
     def __neg__(self, other):
-        return isinstance(other, Register) and self.val.__neg__(other.val)
+        return isinstance(other, _Register) and self.val.__neg__(other.val)
 
     def __ne__(self, other):
-        return isinstance(other, Register) and self.val.__ne__(other.val)
+        return isinstance(other, _Register) and self.val.__ne__(other.val)
 
     def __rmul__(self, other):
-        return isinstance(other, Register) and self.val.__rmul__(other.val)
+        return isinstance(other, _Register) and self.val.__rmul__(other.val)
 
     def __mul__(self, other):
-        return isinstance(other, Register) and self.val.__mul__(other.val)
+        return isinstance(other, _Register) and self.val.__mul__(other.val)
 
     def __add__(self, other):
-        return isinstance(other, Register) and self.val.__add__(other.val)
+        return isinstance(other, _Register) and self.val.__add__(other.val)
 
     def __bool__(self, other):
-        return isinstance(other, Register) and self.val.__bool__(other.val)
+        return isinstance(other, _Register) and self.val.__bool__(other.val)
 
     def __sub__(self, other):
-        return isinstance(other, Register) and self.val.__sub__(other.val)
+        return isinstance(other, _Register) and self.val.__sub__(other.val)
 
 
 class HyperMinHash:
     """
     HyperMinHash is a sketch for cardinality estimation based on LogLog counting
     """
-    def __init__(self, ln: int = m):
-        logging.debug(f"New HyperMinHash({ln}).")
-        self.reg = [Register() for _ in range(ln)]
+    def __init__(self, p: int = 14, q: int = 6, r: int = 10, c: float = 0.169919487159739093975315012348):
+        """
 
-    def add_hash(self, x: np.uint64, y: np.uint64) -> None:
+        :param p:
+        :param q: the number of bits for the LogLog hash
+        :param r: number of bits for the bbit hash
+        :param c:
+        """
+        self.p = p
+        self.q = q
+        self.r = r
+        self._c = c
+
+        logging.debug(f"New HyperMinHash({self._m}).")
+        self.reg = [_Register() for _ in range(self._m)]
+
+    @property
+    def _m(self):
+        return np.uint32(1 << self.p)
+
+    @property
+    def _max(self):
+        return 64 - self.p
+
+    @property
+    def _maxX(self):
+        return np.iinfo(np.uint64).max >> max
+
+    @property
+    def _alpha(self):
+        return 0.7213 / (1 + 1.079 / np.float64(self._m))
+
+    @property
+    def _2q(self):
+        return 1 << self.q
+
+    @property
+    def _2r(self):
+        return 1 << self.r
+
+    @staticmethod
+    def _leading_zeros64(x: np.uint64, num_bits: int = 64) -> int:
+        """
+        LeadingZeros64 returns the number of leading zero bits in x; the result is 64 for x == 0.
+        """
+        res = 0
+        while (x & (np.uint64(1) << (np.uint64(num_bits) - np.uint64(1)))) == 0:
+            x = (x << np.uint64(1))
+            res += 1
+
+        return res
+
+    @staticmethod
+    def _metro_hash_128(val: bytes, seed: int):
+        h: bytes = metrohash.metrohash128(val, seed)
+
+        h1 = int.from_bytes(h, byteorder="little", signed=False)
+        h2 = int.from_bytes(h[8:], byteorder="little", signed=False)
+
+        h1 = np.uint64(h1 % np.iinfo(np.uint64).max)
+        h2 = np.uint64(h2 % np.iinfo(np.uint64).max)
+
+        return h1, h2
+
+    def _add_hash(self, x: np.uint64, y: np.uint64) -> None:
         """
         AddHash takes in a "hashed" value (bring your own hashing)
         """
         k = x >> np.uint32(max)
-        lz = np.uint8(leading_zeros64((x << np.uint64(p)) ^ np.uint64(maxX))) + 1
-        sig = y << (np.uint64(64) - np.uint64(r)) >> (np.uint64(64) - np.uint64(r))
+        lz = np.uint8(self._leading_zeros64((x << np.uint64(self.p)) ^ np.uint64(self._maxX))) + 1
+        sig = y << (np.uint64(64) - np.uint64(self.r)) >> (np.uint64(64) - np.uint64(self.r))
         sig = np.uint16(sig % np.iinfo(np.uint16).max)
-        reg = Register.from_tuple(lz, sig)
+        reg = _Register.from_tuple(lz, sig, self.r)
         if self.reg[k] is None or self.reg[k] < reg:
             self.reg[k] = reg
 
@@ -130,11 +154,11 @@ class HyperMinHash:
 
         logging.debug(f"HyperMinHash.add({value}).")
 
-        h1, h2 = metro_hash_128(value, 1337)
-        self.add_hash(h1, h2)
+        h1, h2 = self._metro_hash_128(value, 1337)
+        self._add_hash(h1, h2)
 
     @staticmethod
-    def beta(ez: np.float64) -> np.float64:
+    def _beta(ez: np.float64) -> np.float64:
         zl = np.log(ez + 1)
         return -0.370393911 * ez + \
             0.070471823 * zl + \
@@ -146,12 +170,12 @@ class HyperMinHash:
             0.00042419 * np.power(zl, 7)
 
     @staticmethod
-    def reg_sum_and_zeros(registers: List[Register]) -> Tuple[np.float64, np.float64]:
+    def reg_sum_and_zeros(registers: List[_Register], q: int) -> Tuple[np.float64, np.float64]:
         sm: np.float64 = np.float64(0)
         ez: np.float64 = np.float64(0)
 
         for val in registers:
-            lz = val.lz()
+            lz = val.lz(q)
             if lz == 0:
                 ez += 1
             sm += 1 / np.power(2, np.float64(lz))
@@ -162,8 +186,8 @@ class HyperMinHash:
         """
         Cardinality returns the number of unique elements added to the sketch
         """
-        sm, ez = reg_sum_and_zeros(self.reg)
-        res = np.uint64(alpha * np.float64(m) * (np.float64(m) - ez) / (beta(ez) + sm))
+        sm, ez = self.reg_sum_and_zeros(self.reg, self.q)
+        res = np.uint64(self._alpha * np.float64(self._m) * (np.float64(self._m) - ez) / (self._beta(ez) + sm))
         logging.debug(f"HyperMinHash.cardinality sm={sm}, ez={ez}, res={res}.")
         return res
 
@@ -200,40 +224,41 @@ class HyperMinHash:
 
         crd_slf = np.float64(self.cardinality())
         crd_otr = np.float64(other.cardinality())
-        ec = self.approximate_expected_collisions(crd_slf, crd_otr)
+        ec = self._approximate_expected_collisions(crd_slf, crd_otr)
 
         # FIXME: must be a better way to predetect this
         if c < ec:
             return np.float64(0)
 
         res = np.float64((c - ec) / n)
-        logging.debug(f"HyperMinHash.similarity c={c}, n={n}, crd_slf={crd_slf}, crd_otr={crd_otr}, ec={ec}, res={res}.")
+        logging.debug(f"HyperMinHash.similarity "
+                      f"c={c}, n={n}, crd_slf={crd_slf}, crd_otr={crd_otr}, ec={ec}, res={res}.")
 
         return res
 
-    def approximate_expected_collisions(self, n: np.float(64), m: np.float(64)) -> np.float(64):
+    def _approximate_expected_collisions(self, n: np.float(64), m: np.float(64)) -> np.float(64):
         if n < m:
             n, m = m, n
 
-        if n > np.power(2, np.power(2, q) + r):
+        if n > np.power(2, np.power(2, self.q) + self.r):
             return np.iinfo(np.uint64).max
-        elif n > np.power(2, p + 5):
+        elif n > np.power(2, self.p + 5):
             d = (4 * n / m) / np.power((1 + n) / m, 2)
-            return c * np.power(2, p - r) * d + 0.5
+            return self._c * np.power(2, self.p - self.r) * d + 0.5
         else:
-            return self.expected_collision(n, m) / np.float64(p)
+            return self._expected_collision(n, m) / np.float64(self.p)
 
-    def expected_collision(self, n: np.float(64), m: np.float(64)) -> np.float(64):
+    def _expected_collision(self, n: np.float(64), m: np.float(64)) -> np.float(64):
         x = np.float64(0)
 
-        for i in range(1, _2q + 1):
-            for j in range(1, _2r + 1):
-                if i != _2q:
-                    den = np.power(2, p + r + i)
-                    b1: np.float64 = (_2r + j) / den
-                    b2: np.float64 = (_2r + j + 1) / den
+        for i in range(1, self._2q + 1):
+            for j in range(1, self._2r + 1):
+                if i != self._2q:
+                    den = np.power(2, self.p + self.r + i)
+                    b1: np.float64 = (self._2r + j) / den
+                    b2: np.float64 = (self._2r + j + 1) / den
                 else:
-                    den = np.power(2, p + r + i - 1)
+                    den = np.power(2, self.p + self.r + i - 1)
                     b1: np.float64 = j / den
                     b2: np.float64 = (j + 1) / den
 
@@ -241,7 +266,7 @@ class HyperMinHash:
                 pry = np.power(1 - b2, m) - np.power(1 - b1, m)
                 x += (prx * pry)
 
-        return (x * np.float64(p)) + 0.5
+        return (x * np.float64(self.p)) + 0.5
 
     def intersection(self, other: "HyperMinHash") -> np.uint64:
         """
