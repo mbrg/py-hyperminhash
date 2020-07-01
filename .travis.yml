@@ -5,7 +5,8 @@ python:
 install:
   - pip install -r requirements.txt
 script:
-  - python -m pytest hyperminhash_test.py
+  - export PYTHONPATH=${PYTHONPATH}:${PWD}/src
+  - python -m pytest tests/
 branches:
   only:
    - master
