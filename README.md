@@ -1,6 +1,6 @@
 # HyperMinSketch
 
-![Build Status](https://travis-ci.org/mibarg/hyperminhash.svg?branch=master)
+![Build Status](https://travis-ci.org/mibarg/py-hyperminhash.svg?branch=master)
 
 This repository is a naive Python>=3.6 port of golang [hyperminhash](https://github.com/axiomhq/hyperminhash):
 
