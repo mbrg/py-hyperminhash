@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 import string
 
-from hyperminhash.hyperminhash import Register, m, reg_sum_and_zeros, HyperMinHash
+from hyperminhash.hyperminhash import Register, HyperMinHash
 
 
 def estimate_error(got, exp: int) -> float:
@@ -33,15 +33,15 @@ def test_zeros(p: int = 14, exp: float = 0.0):
 		if val.lz() == 0:
 			exp += 1
 		registers.append(val)
-	_, got = reg_sum_and_zeros(registers)
+	_, got = HyperMinHash.reg_sum_and_zeros(registers)
 
 	assert got == exp, f"expected {exp:.2f}, got {got:.2f}"
 
 
 def test_all_zeros(exp: float = 16384.0):
-	registers = [Register() for _ in range(m)]
+	registers = HyperMinHash().reg
 
-	_, got = reg_sum_and_zeros(registers)
+	_, got = HyperMinHash.reg_sum_and_zeros(registers)
 	assert got == exp, f"expected {exp:.2f}, got {got:.2f}"
 
 

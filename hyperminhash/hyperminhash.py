@@ -111,19 +111,6 @@ def leading_zeros64(x: np.uint64, num_bits: int = 64) -> int:
     return res
 
 
-def reg_sum_and_zeros(registers: List[Register]) -> Tuple[np.float64, np.float64]:
-    sm: np.float64 = np.float64(0)
-    ez: np.float64 = np.float64(0)
-
-    for val in registers:
-        lz = val.lz()
-        if lz == 0:
-            ez += 1
-        sm += 1 / np.power(2, np.float64(lz))
-
-    return sm, ez
-
-
 class HyperMinHash:
     """
     HyperMinHash is a sketch for cardinality estimation based on LogLog counting
@@ -157,6 +144,19 @@ class HyperMinHash:
 
         h1, h2 = metro_hash_128(value, 1337)
         self.add_hash(h1, h2)
+
+    @staticmethod
+    def reg_sum_and_zeros(registers: List[Register]) -> Tuple[np.float64, np.float64]:
+        sm: np.float64 = np.float64(0)
+        ez: np.float64 = np.float64(0)
+
+        for val in registers:
+            lz = val.lz()
+            if lz == 0:
+                ez += 1
+            sm += 1 / np.power(2, np.float64(lz))
+
+        return sm, ez
 
     def cardinality(self) -> np.uint64:
         """
