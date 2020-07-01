@@ -1,2 +1,3 @@
 metrohash-python
 pytest
+numpy
