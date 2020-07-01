@@ -4,6 +4,9 @@ import numpy as np
 
 import metrohash
 
+import logging
+
+
 p = 14
 m = np.uint32(1 << p)  # 16384
 max = 64 - p
@@ -42,6 +45,7 @@ def beta(ez: np.float64) -> np.float64:
 
 class Register:
     def __init__(self, val: int = 0, *args, **kwargs):
+        logging.debug(f"New Register({val}).")
         self.val = np.uint16(val, *args, **kwargs)
 
     @classmethod
@@ -125,6 +129,7 @@ class HyperMinHash:
     HyperMinHash is a sketch for cardinality estimation based on LogLog counting
     """
     def __init__(self, ln: int = m):
+        logging.debug(f"New HyperMinHash({ln}).")
         self.reg = [Register() for _ in range(ln)]
 
     def add_hash(self, x: np.uint64, y: np.uint64) -> None:
@@ -148,6 +153,8 @@ class HyperMinHash:
         if isinstance(value, str):
             value = str.encode(value)
 
+        logging.debug(f"HyperMinHash.add({value}).")
+
         h1, h2 = metro_hash_128(value, 1337)
         self.add_hash(h1, h2)
 
@@ -156,7 +163,9 @@ class HyperMinHash:
         Cardinality returns the number of unique elements added to the sketch
         """
         sm, ez = reg_sum_and_zeros(self.reg)
-        return np.uint64(alpha * np.float64(m) * (np.float64(m) - ez) / (beta(ez) + sm))
+        res = np.uint64(alpha * np.float64(m) * (np.float64(m) - ez) / (beta(ez) + sm))
+        logging.debug(f"HyperMinHash.cardinality sm={sm}, ez={ez}, res={res}.")
+        return res
 
     def __len__(self):
         return int(self.cardinality())
@@ -197,7 +206,10 @@ class HyperMinHash:
         if c < ec:
             return np.float64(0)
 
-        return np.float64((c - ec) / n)
+        res = np.float64((c - ec) / n)
+        logging.debug(f"HyperMinHash.similarity c={c}, n={n}, crd_slf={crd_slf}, crd_otr={crd_otr}, ec={ec}, res={res}.")
+
+        return res
 
     def approximate_expected_collisions(self, n: np.float(64), m: np.float(64)) -> np.float(64):
         if n < m:
