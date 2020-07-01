@@ -91,7 +91,7 @@ class HyperMinHash:
 
     @property
     def _maxX(self):
-        return np.iinfo(np.uint64).max >> max
+        return np.iinfo(np.uint64).max >> self._max
 
     @property
     def _alpha(self):
@@ -133,7 +133,7 @@ class HyperMinHash:
         """
         AddHash takes in a "hashed" value (bring your own hashing)
         """
-        k = x >> np.uint32(max)
+        k = x >> np.uint32(self._max)
         lz = np.uint8(self._leading_zeros64((x << np.uint64(self.p)) ^ np.uint64(self._maxX))) + 1
         sig = y << (np.uint64(64) - np.uint64(self.r)) >> (np.uint64(64) - np.uint64(self.r))
         sig = np.uint16(sig % np.iinfo(np.uint16).max)
