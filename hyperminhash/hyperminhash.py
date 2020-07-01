@@ -69,11 +69,9 @@ class HyperMinHash:
     """
     def __init__(self, p: int = 14, q: int = 6, r: int = 10, c: float = 0.169919487159739093975315012348):
         """
-
-        :param p:
-        :param q: the number of bits for the LogLog hash
+        :param p: number of bits for each register
+        :param q: number of bits for the LogLog hash
         :param r: number of bits for the bbit hash
-        :param c:
         """
         self.p = p
         self.q = q
