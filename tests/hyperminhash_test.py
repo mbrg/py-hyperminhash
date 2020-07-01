@@ -25,10 +25,10 @@ def rnd_str(size: int):
 	return "".join(list(arr))
 
 
-def test_zeros(ln: int = m, exp: float = 0.0):
+def test_zeros(p: int = 14, exp: float = 0.0):
 	registers = []
 
-	for i in range(ln):
+	for i in range(1 << p):
 		val = Register(np.random.randint(0, np.iinfo(np.uint16).max))
 		if val.lz() == 0:
 			exp += 1
