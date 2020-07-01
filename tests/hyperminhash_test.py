@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 import string
 
-from hyperminhash import Register, m, reg_sum_and_zeros, HyperMinHash
+from hyperminhash.hyperminhash import Register, m, reg_sum_and_zeros, HyperMinHash
 
 
 def estimate_error(got, exp: int) -> float:
