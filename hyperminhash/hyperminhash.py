@@ -43,18 +43,6 @@ def leading_zeros64(x: np.uint64, num_bits: int = 64) -> int:
     return res
 
 
-def beta(ez: np.float64) -> np.float64:
-    zl = np.log(ez + 1)
-    return -0.370393911 * ez + \
-        0.070471823 * zl + \
-        0.17393686 * np.power(zl, 2) + \
-        0.16339839 * np.power(zl, 3) + \
-        -0.09237745 * np.power(zl, 4) + \
-        0.03738027 * np.power(zl, 5) + \
-        -0.005384159 * np.power(zl, 6) + \
-        0.00042419 * np.power(zl, 7)
-
-
 class Register:
     def __init__(self, val: int = 0, *args, **kwargs):
         logging.debug(f"New Register({val}).")
@@ -144,6 +132,18 @@ class HyperMinHash:
 
         h1, h2 = metro_hash_128(value, 1337)
         self.add_hash(h1, h2)
+
+    @staticmethod
+    def beta(ez: np.float64) -> np.float64:
+        zl = np.log(ez + 1)
+        return -0.370393911 * ez + \
+            0.070471823 * zl + \
+            0.17393686 * np.power(zl, 2) + \
+            0.16339839 * np.power(zl, 3) + \
+            -0.09237745 * np.power(zl, 4) + \
+            0.03738027 * np.power(zl, 5) + \
+            -0.005384159 * np.power(zl, 6) + \
+            0.00042419 * np.power(zl, 7)
 
     @staticmethod
     def reg_sum_and_zeros(registers: List[Register]) -> Tuple[np.float64, np.float64]:
