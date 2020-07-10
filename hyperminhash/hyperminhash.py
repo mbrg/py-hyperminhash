@@ -12,11 +12,6 @@ class _Register:
         logging.debug(f"New Register({val}).")
         self.val = np.uint16(val, *args, **kwargs)
 
-    @staticmethod
-    def from_tuple(lz: np.uint8, sig: np.uint16, r: int, *args, **kwargs):
-        val = (np.uint16(lz) << r) | sig
-        return _Register(val, *args, **kwargs)
-
     def __str__(self):
         return self.val.__str__()
 
@@ -126,6 +121,10 @@ class HyperMinHash:
 
         return h1, h2
 
+    def from_tuple(self, lz: np.uint8, sig: np.uint16):
+        val = (np.uint16(lz) << self.r) | sig
+        return _Register(val)
+
     def lz(self, val: np.uint16) -> np.uint8:
         return np.uint8(val >> (16 - self.q))
 
@@ -137,7 +136,7 @@ class HyperMinHash:
         lz = np.uint8(self._leading_zeros64((x << np.uint64(self.p)) ^ np.uint64(self._maxX))) + 1
         sig = y << (np.uint64(64) - np.uint64(self.r)) >> (np.uint64(64) - np.uint64(self.r))
         sig = np.uint16(sig % np.iinfo(np.uint16).max)
-        reg = _Register.from_tuple(lz, sig, self.r)
+        reg = self.from_tuple(lz, sig)
         if self.reg[k] is None or self.reg[k] < reg:
             self.reg[k] = reg
 
