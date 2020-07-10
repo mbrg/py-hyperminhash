@@ -68,6 +68,7 @@ def test_cardinality(step_init: int = 10000, iters: int = 1000000):
 		print(f"PASS iter {i}.")
 
 
+@pytest.mark.slow
 def test_merge(num_items: int = 3500000):
 	sk1 = HyperMinHash()
 	sk2 = HyperMinHash()
@@ -91,6 +92,7 @@ def test_merge(num_items: int = 3500000):
 		assert ratio <= 2, f"Exact {exact}, got {res} which is {ratio:.2f} error."
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("j", range(1, 21))
 def test_intersection(j, k: int = 1000000):
 
@@ -126,6 +128,7 @@ def test_intersection(j, k: int = 1000000):
 	print(f"PASS iter {j}.")
 
 
+@pytest.mark.slow
 def test_no_intersection(num_items1: int = 1000000, num_items2: int = 2000000):
 	sk1 = HyperMinHash()
 	sk2 = HyperMinHash()
