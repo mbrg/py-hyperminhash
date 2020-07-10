@@ -156,7 +156,7 @@ class HyperMinHash:
         crd_otr = np.float64(other.cardinality())
         ec = self._approximate_expected_collisions(crd_slf, crd_otr)
 
-        # FIXME: must be a better way to predetect this
+        # FIXME: must be a better way to pre-detect this
         if c < ec:
             return np.float64(0)
 
