@@ -167,8 +167,7 @@ class HyperMinHash:
             -0.005384159 * np.power(zl, 6) + \
             0.00042419 * np.power(zl, 7)
 
-    @staticmethod
-    def reg_sum_and_zeros(registers: List[_Register], q: int) -> Tuple[np.float64, np.float64]:
+    def reg_sum_and_zeros(self, registers: List[_Register], q: int) -> Tuple[np.float64, np.float64]:
         sm: np.float64 = np.float64(0)
         ez: np.float64 = np.float64(0)
 
