@@ -167,12 +167,12 @@ class HyperMinHash:
             -0.005384159 * np.power(zl, 6) + \
             0.00042419 * np.power(zl, 7)
 
-    def reg_sum_and_zeros(self, registers: List[_Register], q: int) -> Tuple[np.float64, np.float64]:
+    def reg_sum_and_zeros(self, registers: List[_Register]) -> Tuple[np.float64, np.float64]:
         sm: np.float64 = np.float64(0)
         ez: np.float64 = np.float64(0)
 
         for val in registers:
-            lz = val.lz(q)
+            lz = val.lz(self.q)
             if lz == 0:
                 ez += 1
             sm += 1 / np.power(2, np.float64(lz))
@@ -183,7 +183,7 @@ class HyperMinHash:
         """
         Cardinality returns the number of unique elements added to the sketch
         """
-        sm, ez = self.reg_sum_and_zeros(self.reg, self.q)
+        sm, ez = self.reg_sum_and_zeros(self.reg)
         res = np.uint64(self._alpha * np.float64(self._m) * (np.float64(self._m) - ez) / (self._beta(ez) + sm))
         logging.debug(f"HyperMinHash.cardinality sm={sm}, ez={ez}, res={res}.")
         return res

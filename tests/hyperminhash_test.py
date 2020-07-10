@@ -34,7 +34,7 @@ def test_zeros(p: int = 14, q: int = 6, exp: float = 0.0):
 		if val.lz(q) == 0:
 			exp += 1
 		registers.append(val)
-	_, got = hll.reg_sum_and_zeros(registers, q)
+	_, got = hll.reg_sum_and_zeros(registers)
 
 	assert got == exp, f"expected {exp:.2f}, got {got:.2f}"
 
@@ -43,7 +43,7 @@ def test_all_zeros(exp: float = 16384.0):
 	hll = HyperMinHash()
 	registers = hll.reg
 
-	_, got = hll.reg_sum_and_zeros(registers, hll.q)
+	_, got = hll.reg_sum_and_zeros(registers)
 	assert got == exp, f"expected {exp:.2f}, got {got:.2f}"
 
 
