@@ -139,7 +139,9 @@ class HyperMinHash:
         if len(self.reg) != len(other.reg):
             raise ValueError(f"self / other have different lengths: {len(self.reg)} / {len(other.reg)}.")
 
-        return np.maximum(self.reg, other.reg)
+        self.reg = np.maximum(self.reg, other.reg)
+
+        return self
 
     def similarity(self, other: "HyperMinHash") -> np.float64:
         """
