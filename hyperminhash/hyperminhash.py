@@ -22,11 +22,11 @@ class HyperMinHash:
         self.r = r
         self._c = c
 
-        logging.debug(f"New HyperMinHash({self._m}).")
-        self.reg = np.zeros(self._m, dtype=np.uint16)
+        logging.debug(f"New HyperMinHash({self.m}).")
+        self.reg = np.zeros(self.m, dtype=np.uint16)
 
     @property
-    def _m(self):
+    def m(self):
         return np.uint32(1 << self.p)
 
     @property
@@ -39,7 +39,7 @@ class HyperMinHash:
 
     @property
     def _alpha(self):
-        return 0.7213 / (1 + 1.079 / np.float64(self._m))
+        return 0.7213 / (1 + 1.079 / np.float64(self.m))
 
     @property
     def _2q(self):
@@ -125,7 +125,7 @@ class HyperMinHash:
         Cardinality returns the number of unique elements added to the sketch
         """
         sm, ez = self.reg_sum_and_zeros(self.reg)
-        res = np.uint64(self._alpha * np.float64(self._m) * (np.float64(self._m) - ez) / (self._beta(ez) + sm))
+        res = np.uint64(self._alpha * np.float64(self.m) * (np.float64(self.m) - ez) / (self._beta(ez) + sm))
         logging.debug(f"HyperMinHash.cardinality sm={sm}, ez={ez}, res={res}.")
         return res
 

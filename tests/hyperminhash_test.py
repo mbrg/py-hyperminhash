@@ -25,16 +25,15 @@ def rnd_str(size: int):
 	return "".join(list(arr))
 
 
-def test_zeros(p: int = 14,exp: float = 0.0):
+def test_zeros(exp: float = 0.0):
 	hll = HyperMinHash()
-	registers = []
 
-	for i in range(1 << p):
+	for i in range(hll.m):
 		val = np.uint16(np.random.randint(0, np.iinfo(np.uint16).max))
 		if hll.lz(val) == 0:
 			exp += 1
-		registers.append(val)
-	_, got = hll.reg_sum_and_zeros(np.array(registers))
+		hll.reg[i] = val
+	_, got = hll.reg_sum_and_zeros(hll.reg)
 
 	assert got == exp, f"expected {exp:.2f}, got {got:.2f}"
 
