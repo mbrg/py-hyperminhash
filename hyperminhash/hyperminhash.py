@@ -112,13 +112,11 @@ class HyperMinHash:
         val = np.polyval([0.00042419, -0.005384159, 0.03738027, -0.09237745, 0.16339839, 0.17393686, 0.070471823, -0.370393911 * ez], zl)
         return np.float64(val)
 
-
     def reg_sum_and_zeros(self) -> Tuple[np.float64, np.float64]:
         lz = np.uint8(self.reg >> (16 - self.q))
         return \
             np.float64((1 / np.power(2, np.float64(lz))).sum()), \
             np.float64((lz == 0).sum())
-
 
     def cardinality(self) -> np.uint64:
         """
