@@ -157,14 +157,8 @@ class HyperMinHash:
     @staticmethod
     def _beta(ez: np.float64) -> np.float64:
         zl = np.log(ez + 1)
-        return -0.370393911 * ez + \
-            0.070471823 * zl + \
-            0.17393686 * np.power(zl, 2) + \
-            0.16339839 * np.power(zl, 3) + \
-            -0.09237745 * np.power(zl, 4) + \
-            0.03738027 * np.power(zl, 5) + \
-            -0.005384159 * np.power(zl, 6) + \
-            0.00042419 * np.power(zl, 7)
+        val = np.polyval([0.00042419, -0.005384159, 0.03738027, -0.09237745, 0.16339839, 0.17393686, 0.070471823, -0.370393911 * ez], zl)
+        return np.float64(val)
 
     def reg_sum_and_zeros(self, registers: List[_Register]) -> Tuple[np.float64, np.float64]:
         sm: np.float64 = np.float64(0)
