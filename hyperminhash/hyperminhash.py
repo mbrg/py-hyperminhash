@@ -147,14 +147,10 @@ class HyperMinHash:
         """
         Similarity return a Jaccard Index similarity estimation
         """
-        c = np.float64(0)
-        n = np.float64(0)
 
-        for i in range(len(self.reg)):
-            if self.reg[i] != 0 and self.reg[i] == other.reg[i]:
-                c += 1
-            if self.reg[i] != 0 or other.reg[i] != 0:
-                n += 1
+        c = np.float64(((self.reg != 0) & (self.reg == other.reg)).sum())
+        n = np.float64(((self.reg != 0) | (other.reg != 0)).sum())
+
         if c == 0:
             return np.float64(0)
 
