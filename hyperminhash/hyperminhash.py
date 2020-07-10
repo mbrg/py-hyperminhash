@@ -17,9 +17,6 @@ class _Register:
         val = (np.uint16(lz) << r) | sig
         return _Register(val, *args, **kwargs)
 
-    def lz(self, q: int) -> np.uint8:
-        return np.uint8(np.uint16(self.val) >> (16 - q))
-
     def __str__(self):
         return self.val.__str__()
 
@@ -129,6 +126,9 @@ class HyperMinHash:
 
         return h1, h2
 
+    def lz(self, val: np.uint16) -> np.uint8:
+        return np.uint8(val >> (16 - self.q))
+
     def _add_hash(self, x: np.uint64, y: np.uint64) -> None:
         """
         AddHash takes in a "hashed" value (bring your own hashing)
@@ -172,7 +172,7 @@ class HyperMinHash:
         ez: np.float64 = np.float64(0)
 
         for val in registers:
-            lz = val.lz(self.q)
+            lz = self.lz(val.val)
             if lz == 0:
                 ez += 1
             sm += 1 / np.power(2, np.float64(lz))
