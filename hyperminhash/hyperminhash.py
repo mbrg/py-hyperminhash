@@ -1,58 +1,10 @@
-from typing import List, Tuple, Union
+from typing import Tuple, Union
 
 import numpy as np
 
 import metrohash
 
 import logging
-
-
-class _Register:
-    def __init__(self, val: int = 0, *args, **kwargs):
-        logging.debug(f"New Register({val}).")
-        self.val = np.uint16(val, *args, **kwargs)
-
-    def __str__(self):
-        return self.val.__str__()
-
-    def __repr__(self):
-        return self.val.__repr__()
-
-    def __eq__(self, other):
-        return isinstance(other, _Register) and self.val.__eq__(other.val)
-
-    def __ge__(self, other):
-        return isinstance(other, _Register) and self.val.__ge__(other.val)
-
-    def __le__(self, other):
-        return isinstance(other, _Register) and self.val.__le__(other.val)
-
-    def __gt__(self, other):
-        return isinstance(other, _Register) and self.val.__gt__(other.val)
-
-    def __lt__(self, other):
-        return isinstance(other, _Register) and self.val.__lt__(other.val)
-
-    def __neg__(self, other):
-        return isinstance(other, _Register) and self.val.__neg__(other.val)
-
-    def __ne__(self, other):
-        return isinstance(other, _Register) and self.val.__ne__(other.val)
-
-    def __rmul__(self, other):
-        return isinstance(other, _Register) and self.val.__rmul__(other.val)
-
-    def __mul__(self, other):
-        return isinstance(other, _Register) and self.val.__mul__(other.val)
-
-    def __add__(self, other):
-        return isinstance(other, _Register) and self.val.__add__(other.val)
-
-    def __bool__(self, other):
-        return isinstance(other, _Register) and self.val.__bool__(other.val)
-
-    def __sub__(self, other):
-        return isinstance(other, _Register) and self.val.__sub__(other.val)
 
 
 class HyperMinHash:
@@ -71,7 +23,7 @@ class HyperMinHash:
         self._c = c
 
         logging.debug(f"New HyperMinHash({self._m}).")
-        self.reg = [_Register() for _ in range(self._m)]
+        self.reg = np.zeros(self._m, dtype=np.uint16)
 
     @property
     def _m(self):
@@ -123,7 +75,7 @@ class HyperMinHash:
 
     def from_tuple(self, lz: np.uint8, sig: np.uint16):
         val = (np.uint16(lz) << self.r) | sig
-        return _Register(val)
+        return np.uint16(val)
 
     def lz(self, val: np.uint16) -> np.uint8:
         return np.uint8(val >> (16 - self.q))
@@ -160,12 +112,12 @@ class HyperMinHash:
         val = np.polyval([0.00042419, -0.005384159, 0.03738027, -0.09237745, 0.16339839, 0.17393686, 0.070471823, -0.370393911 * ez], zl)
         return np.float64(val)
 
-    def reg_sum_and_zeros(self, registers: List[_Register]) -> Tuple[np.float64, np.float64]:
+    def reg_sum_and_zeros(self, registers: np.ndarray) -> Tuple[np.float64, np.float64]:
         sm: np.float64 = np.float64(0)
         ez: np.float64 = np.float64(0)
 
         for val in registers:
-            lz = self.lz(val.val)
+            lz = self.lz(val)
             if lz == 0:
                 ez += 1
             sm += 1 / np.power(2, np.float64(lz))
