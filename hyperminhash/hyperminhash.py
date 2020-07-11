@@ -73,10 +73,6 @@ class HyperMinHash:
     def _2r(self):
         return 1 << self.r
 
-    def from_tuple(self, lz: np.uint8, sig: np.uint16):
-        val = (np.uint16(lz) << self.r) | sig
-        return np.uint16(val)
-
     def lz(self, val: np.uint16) -> np.uint8:
         return np.uint8(val >> (16 - self.q))
 
@@ -85,10 +81,14 @@ class HyperMinHash:
         AddHash takes in a "hashed" value (bring your own hashing)
         """
         k = x >> np.uint32(self._max)
-        lz = np.uint8(self._leading_zeros64((x << np.uint64(self.p)) ^ np.uint64(self._maxX))) + 1
+
+        lz = np.uint8(_leading_zeros64((x << np.uint64(self.p)) ^ np.uint64(self._maxX))) + 1
+
         sig = y << (np.uint64(64) - np.uint64(self.r)) >> (np.uint64(64) - np.uint64(self.r))
         sig = np.uint16(sig % np.iinfo(np.uint16).max)
-        reg = self.from_tuple(lz, sig)
+
+        reg = np.uint16((np.uint16(lz) << self.r) | sig)
+
         if self.reg[k] is None or self.reg[k] < reg:
             self.reg[k] = reg
 
