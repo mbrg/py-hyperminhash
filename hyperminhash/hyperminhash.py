@@ -46,11 +46,11 @@ class HyperMinHash:
 
     @cached_property
     def _max(self):
-        return 64 - self.p
+        return np.uint32(64 - self.p)
 
     @cached_property
     def _maxX(self):
-        return np.iinfo(np.uint64).max >> self._max
+        return np.uint64(np.iinfo(np.uint64).max >> self._max)
 
     @cached_property
     def _alpha(self):
@@ -64,6 +64,14 @@ class HyperMinHash:
     def _2r(self):
         return 1 << self.r
 
+    @cached_property
+    def _u64_p(self):
+        return np.uint64(self.p)
+
+    @cached_property
+    def _mr(self):
+        return np.uint64(64) - np.uint64(self.r)
+
     def lz(self, val: np.uint16) -> np.uint8:
         return np.uint8(val >> (16 - self.q))
 
@@ -71,17 +79,16 @@ class HyperMinHash:
         """
         AddHash takes in a "hashed" value (bring your own hashing)
         """
-        k = x >> np.uint32(self._max)
+        k = x >> self._max
 
-        lz = np.uint8(_leading_zeros64((x << np.uint64(self.p)) ^ np.uint64(self._maxX))) + 1
+        lz = _leading_zeros64((x << self._u64_p) ^ self._maxX) + 1
 
-        sig = y << (np.uint64(64) - np.uint64(self.r)) >> (np.uint64(64) - np.uint64(self.r))
-        sig = np.uint16(sig % np.iinfo(np.uint16).max)
+        sig = y << self._mr >> self._mr
+        sig = np.uint16(sig)
 
-        reg = np.uint16((np.uint16(lz) << self.r) | sig)
+        reg = np.uint16((lz << self.r) | sig)
 
-        if self.reg[k] is None or self.reg[k] < reg:
-            self.reg[k] = reg
+        self.reg[k] = max(self.reg[k], reg)
 
     def add(self, value: Union[bytes, str, int]) -> None:
         """
