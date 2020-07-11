@@ -11,12 +11,7 @@ def _leading_zeros64(x: np.uint64, num_bits: int = 64) -> int:
     """
     LeadingZeros64 returns the number of leading zero bits in x; the result is 64 for x == 0.
     """
-    res = 0
-    while (x & (np.uint64(1) << (np.uint64(num_bits) - np.uint64(1)))) == 0:
-        x = (x << np.uint64(1))
-        res += 1
-
-    return res
+    return (np.binary_repr(x, num_bits) + "1").index("1")
 
 
 def _metro_hash_128(val: bytes, seed: int = 1337):
