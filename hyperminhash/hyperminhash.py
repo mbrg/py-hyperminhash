@@ -4,6 +4,7 @@ import numpy as np
 
 import metrohash
 
+from cached_property import cached_property
 import logging
 
 
@@ -39,27 +40,27 @@ class HyperMinHash:
         logging.debug(f"New HyperMinHash({self.m}).")
         self.reg = np.zeros(self.m, dtype=np.uint16)
 
-    @property
+    @cached_property
     def m(self):
         return np.uint32(1 << self.p)
 
-    @property
+    @cached_property
     def _max(self):
         return 64 - self.p
 
-    @property
+    @cached_property
     def _maxX(self):
         return np.iinfo(np.uint64).max >> self._max
 
-    @property
+    @cached_property
     def _alpha(self):
         return 0.7213 / (1 + 1.079 / np.float64(self.m))
 
-    @property
+    @cached_property
     def _2q(self):
         return 1 << self.q
 
-    @property
+    @cached_property
     def _2r(self):
         return 1 << self.r
 
