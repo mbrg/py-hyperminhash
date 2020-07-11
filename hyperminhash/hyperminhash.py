@@ -106,6 +106,10 @@ class HyperMinHash:
         h1, h2 = _metro_hash_128(value)
         self._add_hash(h1, h2)
 
+    def extend(self, args):
+        for arg in args:
+            self.add(arg)
+
     @staticmethod
     def _beta(ez: np.float64) -> np.float64:
         zl = np.log(ez + 1)
