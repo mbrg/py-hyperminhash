@@ -1,4 +1,4 @@
-# HyperMinSketch
+# HyperMinHash
 
 ![Build Status](https://travis-ci.org/mibarg/py-hyperminhash.svg?branch=master)
 
