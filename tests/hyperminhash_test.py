@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 import string
 
-from hyperminhash.hyperminhash import _Register, HyperMinHash
+from hyperminhash.hyperminhash import HyperMinHash
 
 
 def estimate_error(got, exp: int) -> float:
@@ -25,24 +25,23 @@ def rnd_str(size: int):
 	return "".join(list(arr))
 
 
-def test_zeros(p: int = 14, q: int = 6, exp: float = 0.0):
-	registers = []
+def test_zeros(exp: float = 0.0):
+	hll = HyperMinHash()
 
-	for i in range(1 << p):
-		val = _Register(np.random.randint(0, np.iinfo(np.uint16).max))
-		if val.lz(q) == 0:
+	for i in range(hll.m):
+		val = np.uint16(np.random.randint(0, np.iinfo(np.uint16).max))
+		if hll.lz(val) == 0:
 			exp += 1
-		registers.append(val)
-	_, got = HyperMinHash.reg_sum_and_zeros(registers, q)
+		hll.reg[i] = val
+	_, got = hll.reg_sum_and_zeros()
 
 	assert got == exp, f"expected {exp:.2f}, got {got:.2f}"
 
 
 def test_all_zeros(exp: float = 16384.0):
 	hll = HyperMinHash()
-	registers = hll.reg
 
-	_, got = HyperMinHash.reg_sum_and_zeros(registers, hll.q)
+	_, got = hll.reg_sum_and_zeros()
 	assert got == exp, f"expected {exp:.2f}, got {got:.2f}"
 
 

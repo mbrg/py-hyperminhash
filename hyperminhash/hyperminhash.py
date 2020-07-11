@@ -1,66 +1,10 @@
-from typing import List, Tuple, Union
+from typing import Tuple, Union
 
 import numpy as np
 
 import metrohash
 
 import logging
-
-
-class _Register:
-    def __init__(self, val: int = 0, *args, **kwargs):
-        logging.debug(f"New Register({val}).")
-        self.val = np.uint16(val, *args, **kwargs)
-
-    @staticmethod
-    def from_tuple(lz: np.uint8, sig: np.uint16, r: int, *args, **kwargs):
-        val = (np.uint16(lz) << r) | sig
-        return _Register(val, *args, **kwargs)
-
-    def lz(self, q: int) -> np.uint8:
-        return np.uint8(np.uint16(self.val) >> (16 - q))
-
-    def __str__(self):
-        return self.val.__str__()
-
-    def __repr__(self):
-        return self.val.__repr__()
-
-    def __eq__(self, other):
-        return isinstance(other, _Register) and self.val.__eq__(other.val)
-
-    def __ge__(self, other):
-        return isinstance(other, _Register) and self.val.__ge__(other.val)
-
-    def __le__(self, other):
-        return isinstance(other, _Register) and self.val.__le__(other.val)
-
-    def __gt__(self, other):
-        return isinstance(other, _Register) and self.val.__gt__(other.val)
-
-    def __lt__(self, other):
-        return isinstance(other, _Register) and self.val.__lt__(other.val)
-
-    def __neg__(self, other):
-        return isinstance(other, _Register) and self.val.__neg__(other.val)
-
-    def __ne__(self, other):
-        return isinstance(other, _Register) and self.val.__ne__(other.val)
-
-    def __rmul__(self, other):
-        return isinstance(other, _Register) and self.val.__rmul__(other.val)
-
-    def __mul__(self, other):
-        return isinstance(other, _Register) and self.val.__mul__(other.val)
-
-    def __add__(self, other):
-        return isinstance(other, _Register) and self.val.__add__(other.val)
-
-    def __bool__(self, other):
-        return isinstance(other, _Register) and self.val.__bool__(other.val)
-
-    def __sub__(self, other):
-        return isinstance(other, _Register) and self.val.__sub__(other.val)
 
 
 class HyperMinHash:
@@ -78,11 +22,11 @@ class HyperMinHash:
         self.r = r
         self._c = c
 
-        logging.debug(f"New HyperMinHash({self._m}).")
-        self.reg = [_Register() for _ in range(self._m)]
+        logging.debug(f"New HyperMinHash({self.m}).")
+        self.reg = np.zeros(self.m, dtype=np.uint16)
 
     @property
-    def _m(self):
+    def m(self):
         return np.uint32(1 << self.p)
 
     @property
@@ -95,7 +39,7 @@ class HyperMinHash:
 
     @property
     def _alpha(self):
-        return 0.7213 / (1 + 1.079 / np.float64(self._m))
+        return 0.7213 / (1 + 1.079 / np.float64(self.m))
 
     @property
     def _2q(self):
@@ -129,6 +73,13 @@ class HyperMinHash:
 
         return h1, h2
 
+    def from_tuple(self, lz: np.uint8, sig: np.uint16):
+        val = (np.uint16(lz) << self.r) | sig
+        return np.uint16(val)
+
+    def lz(self, val: np.uint16) -> np.uint8:
+        return np.uint8(val >> (16 - self.q))
+
     def _add_hash(self, x: np.uint64, y: np.uint64) -> None:
         """
         AddHash takes in a "hashed" value (bring your own hashing)
@@ -137,7 +88,7 @@ class HyperMinHash:
         lz = np.uint8(self._leading_zeros64((x << np.uint64(self.p)) ^ np.uint64(self._maxX))) + 1
         sig = y << (np.uint64(64) - np.uint64(self.r)) >> (np.uint64(64) - np.uint64(self.r))
         sig = np.uint16(sig % np.iinfo(np.uint16).max)
-        reg = _Register.from_tuple(lz, sig, self.r)
+        reg = self.from_tuple(lz, sig)
         if self.reg[k] is None or self.reg[k] < reg:
             self.reg[k] = reg
 
@@ -158,34 +109,21 @@ class HyperMinHash:
     @staticmethod
     def _beta(ez: np.float64) -> np.float64:
         zl = np.log(ez + 1)
-        return -0.370393911 * ez + \
-            0.070471823 * zl + \
-            0.17393686 * np.power(zl, 2) + \
-            0.16339839 * np.power(zl, 3) + \
-            -0.09237745 * np.power(zl, 4) + \
-            0.03738027 * np.power(zl, 5) + \
-            -0.005384159 * np.power(zl, 6) + \
-            0.00042419 * np.power(zl, 7)
+        val = np.polyval([0.00042419, -0.005384159, 0.03738027, -0.09237745, 0.16339839, 0.17393686, 0.070471823, -0.370393911 * ez], zl)
+        return np.float64(val)
 
-    @staticmethod
-    def reg_sum_and_zeros(registers: List[_Register], q: int) -> Tuple[np.float64, np.float64]:
-        sm: np.float64 = np.float64(0)
-        ez: np.float64 = np.float64(0)
-
-        for val in registers:
-            lz = val.lz(q)
-            if lz == 0:
-                ez += 1
-            sm += 1 / np.power(2, np.float64(lz))
-
-        return sm, ez
+    def reg_sum_and_zeros(self) -> Tuple[np.float64, np.float64]:
+        lz = np.uint8(self.reg >> (16 - self.q))
+        return \
+            np.float64((1 / np.power(2, np.float64(lz))).sum()), \
+            np.float64((lz == 0).sum())
 
     def cardinality(self) -> np.uint64:
         """
         Cardinality returns the number of unique elements added to the sketch
         """
-        sm, ez = self.reg_sum_and_zeros(self.reg, self.q)
-        res = np.uint64(self._alpha * np.float64(self._m) * (np.float64(self._m) - ez) / (self._beta(ez) + sm))
+        sm, ez = self.reg_sum_and_zeros()
+        res = np.uint64(self._alpha * np.float64(self.m) * (np.float64(self.m) - ez) / (self._beta(ez) + sm))
         logging.debug(f"HyperMinHash.cardinality sm={sm}, ez={ez}, res={res}.")
         return res
 
@@ -199,9 +137,7 @@ class HyperMinHash:
         if len(self.reg) != len(other.reg):
             raise ValueError(f"self / other have different lengths: {len(self.reg)} / {len(other.reg)}.")
 
-        for i in range(len(self.reg)):
-            if self.reg[i] < other.reg[i]:
-                self.reg[i] = other.reg[i]
+        self.reg = np.maximum(self.reg, other.reg)
 
         return self
 
@@ -209,14 +145,10 @@ class HyperMinHash:
         """
         Similarity return a Jaccard Index similarity estimation
         """
-        c = np.float64(0)
-        n = np.float64(0)
 
-        for i in range(len(self.reg)):
-            if self.reg[i] != 0 and self.reg[i] == other.reg[i]:
-                c += 1
-            if self.reg[i] != 0 or other.reg[i] != 0:
-                n += 1
+        c = np.float64(((self.reg != 0) & (self.reg == other.reg)).sum())
+        n = np.float64(((self.reg != 0) | (other.reg != 0)).sum())
+
         if c == 0:
             return np.float64(0)
 
@@ -224,7 +156,7 @@ class HyperMinHash:
         crd_otr = np.float64(other.cardinality())
         ec = self._approximate_expected_collisions(crd_slf, crd_otr)
 
-        # FIXME: must be a better way to predetect this
+        # FIXME: must be a better way to pre-detect this
         if c < ec:
             return np.float64(0)
 
