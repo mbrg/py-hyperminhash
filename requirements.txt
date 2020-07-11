@@ -1,3 +1,4 @@
 metrohash-python
 pytest
+pytest-xdist
 numpy
