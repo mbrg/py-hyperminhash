@@ -8,6 +8,6 @@ setup(
     license="MIT",
     author="mibarg",
     author_email="mibarg@users.noreply.github.com",
-    install_requires=["metrohash-python", ],
+    install_requires=["metrohash-python", "pytest-xdist", "numpy",  "cached-property"],
     python_requires=">=3.6",
 )
