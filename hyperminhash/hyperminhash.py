@@ -17,12 +17,7 @@ def _leading_zeros64(x: np.uint64, num_bits: int = 64) -> int:
 def _metro_hash_128(val: bytes, seed: int = 1337):
     h: bytes = metrohash.metrohash128(val, seed)
 
-    h1 = int.from_bytes(h, byteorder="little", signed=False)
-    h2 = int.from_bytes(h[8:], byteorder="little", signed=False)
-
-    h1 = np.uint64(h1 % np.iinfo(np.uint64).max)
-    h2 = np.uint64(h2 % np.iinfo(np.uint64).max)
-
+    h1, h2 = np.frombuffer(h, dtype=np.uint64, offset=0)
     return h1, h2
 
 
