@@ -4,6 +4,7 @@ import numpy as np
 
 import metrohash
 
+from cached_property import cached_property
 import logging
 
 
@@ -11,23 +12,13 @@ def _leading_zeros64(x: np.uint64, num_bits: int = 64) -> int:
     """
     LeadingZeros64 returns the number of leading zero bits in x; the result is 64 for x == 0.
     """
-    res = 0
-    while (x & (np.uint64(1) << (np.uint64(num_bits) - np.uint64(1)))) == 0:
-        x = (x << np.uint64(1))
-        res += 1
-
-    return res
+    return (np.binary_repr(x, num_bits) + "1").index("1")
 
 
 def _metro_hash_128(val: bytes, seed: int = 1337):
     h: bytes = metrohash.metrohash128(val, seed)
 
-    h1 = int.from_bytes(h, byteorder="little", signed=False)
-    h2 = int.from_bytes(h[8:], byteorder="little", signed=False)
-
-    h1 = np.uint64(h1 % np.iinfo(np.uint64).max)
-    h2 = np.uint64(h2 % np.iinfo(np.uint64).max)
-
+    h1, h2 = np.frombuffer(h, dtype=np.uint64, offset=0)
     return h1, h2
 
 
@@ -49,29 +40,37 @@ class HyperMinHash:
         logging.debug(f"New HyperMinHash({self.m}).")
         self.reg = np.zeros(self.m, dtype=np.uint16)
 
-    @property
+    @cached_property
     def m(self):
         return np.uint32(1 << self.p)
 
-    @property
+    @cached_property
     def _max(self):
-        return 64 - self.p
+        return np.uint32(64 - self.p)
 
-    @property
+    @cached_property
     def _maxX(self):
-        return np.iinfo(np.uint64).max >> self._max
+        return np.uint64(np.iinfo(np.uint64).max >> self._max)
 
-    @property
+    @cached_property
     def _alpha(self):
         return 0.7213 / (1 + 1.079 / np.float64(self.m))
 
-    @property
+    @cached_property
     def _2q(self):
         return 1 << self.q
 
-    @property
+    @cached_property
     def _2r(self):
         return 1 << self.r
+
+    @cached_property
+    def _u64_p(self):
+        return np.uint64(self.p)
+
+    @cached_property
+    def _mr(self):
+        return np.uint64(64) - np.uint64(self.r)
 
     def lz(self, val: np.uint16) -> np.uint8:
         return np.uint8(val >> (16 - self.q))
@@ -80,17 +79,16 @@ class HyperMinHash:
         """
         AddHash takes in a "hashed" value (bring your own hashing)
         """
-        k = x >> np.uint32(self._max)
+        k = x >> self._max
 
-        lz = np.uint8(_leading_zeros64((x << np.uint64(self.p)) ^ np.uint64(self._maxX))) + 1
+        lz = _leading_zeros64((x << self._u64_p) ^ self._maxX) + 1
 
-        sig = y << (np.uint64(64) - np.uint64(self.r)) >> (np.uint64(64) - np.uint64(self.r))
-        sig = np.uint16(sig % np.iinfo(np.uint16).max)
+        sig = y << self._mr >> self._mr
+        sig = np.uint16(sig)
 
-        reg = np.uint16((np.uint16(lz) << self.r) | sig)
+        reg = np.uint16((lz << self.r) | sig)
 
-        if self.reg[k] is None or self.reg[k] < reg:
-            self.reg[k] = reg
+        self.reg[k] = max(self.reg[k], reg)
 
     def add(self, value: Union[bytes, str, int]) -> None:
         """
