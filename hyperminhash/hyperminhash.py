@@ -7,6 +7,30 @@ import metrohash
 import logging
 
 
+def _leading_zeros64(x: np.uint64, num_bits: int = 64) -> int:
+    """
+    LeadingZeros64 returns the number of leading zero bits in x; the result is 64 for x == 0.
+    """
+    res = 0
+    while (x & (np.uint64(1) << (np.uint64(num_bits) - np.uint64(1)))) == 0:
+        x = (x << np.uint64(1))
+        res += 1
+
+    return res
+
+
+def _metro_hash_128(val: bytes, seed: int = 1337):
+    h: bytes = metrohash.metrohash128(val, seed)
+
+    h1 = int.from_bytes(h, byteorder="little", signed=False)
+    h2 = int.from_bytes(h[8:], byteorder="little", signed=False)
+
+    h1 = np.uint64(h1 % np.iinfo(np.uint64).max)
+    h2 = np.uint64(h2 % np.iinfo(np.uint64).max)
+
+    return h1, h2
+
+
 class HyperMinHash:
     """
     HyperMinHash is a sketch for cardinality estimation based on LogLog counting
@@ -49,34 +73,6 @@ class HyperMinHash:
     def _2r(self):
         return 1 << self.r
 
-    @staticmethod
-    def _leading_zeros64(x: np.uint64, num_bits: int = 64) -> int:
-        """
-        LeadingZeros64 returns the number of leading zero bits in x; the result is 64 for x == 0.
-        """
-        res = 0
-        while (x & (np.uint64(1) << (np.uint64(num_bits) - np.uint64(1)))) == 0:
-            x = (x << np.uint64(1))
-            res += 1
-
-        return res
-
-    @staticmethod
-    def _metro_hash_128(val: bytes, seed: int):
-        h: bytes = metrohash.metrohash128(val, seed)
-
-        h1 = int.from_bytes(h, byteorder="little", signed=False)
-        h2 = int.from_bytes(h[8:], byteorder="little", signed=False)
-
-        h1 = np.uint64(h1 % np.iinfo(np.uint64).max)
-        h2 = np.uint64(h2 % np.iinfo(np.uint64).max)
-
-        return h1, h2
-
-    def from_tuple(self, lz: np.uint8, sig: np.uint16):
-        val = (np.uint16(lz) << self.r) | sig
-        return np.uint16(val)
-
     def lz(self, val: np.uint16) -> np.uint8:
         return np.uint8(val >> (16 - self.q))
 
@@ -85,10 +81,14 @@ class HyperMinHash:
         AddHash takes in a "hashed" value (bring your own hashing)
         """
         k = x >> np.uint32(self._max)
-        lz = np.uint8(self._leading_zeros64((x << np.uint64(self.p)) ^ np.uint64(self._maxX))) + 1
+
+        lz = np.uint8(_leading_zeros64((x << np.uint64(self.p)) ^ np.uint64(self._maxX))) + 1
+
         sig = y << (np.uint64(64) - np.uint64(self.r)) >> (np.uint64(64) - np.uint64(self.r))
         sig = np.uint16(sig % np.iinfo(np.uint16).max)
-        reg = self.from_tuple(lz, sig)
+
+        reg = np.uint16((np.uint16(lz) << self.r) | sig)
+
         if self.reg[k] is None or self.reg[k] < reg:
             self.reg[k] = reg
 
@@ -103,7 +103,7 @@ class HyperMinHash:
 
         logging.debug(f"HyperMinHash.add({value}).")
 
-        h1, h2 = self._metro_hash_128(value, 1337)
+        h1, h2 = _metro_hash_128(value)
         self._add_hash(h1, h2)
 
     @staticmethod
