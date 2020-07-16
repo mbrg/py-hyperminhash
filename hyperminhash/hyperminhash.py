@@ -185,14 +185,18 @@ class HyperMinHash:
 
         for i in range(1, self._2q + 1):
             for j in range(1, self._2r + 1):
-                if i != self._2q:
-                    den = np.power(2, self.p + self.r + i)
-                    b1: np.float64 = (self._2r + j) / den
-                    b2: np.float64 = (self._2r + j + 1) / den
+                den = np.power(2, self.p + self.r + i - (i == self._2q))
+
+                if den <= 0:
+                    b1: np.float64 = np.float64(0)
+                    b2: np.float64 = np.float64(0)
                 else:
-                    den = np.power(2, self.p + self.r + i - 1)
-                    b1: np.float64 = j / den
-                    b2: np.float64 = (j + 1) / den
+                    if i != self._2q:
+                        b1: np.float64 = (self._2r + j) / den
+                        b2: np.float64 = (self._2r + j + 1) / den
+                    else:
+                        b1: np.float64 = j / den
+                        b2: np.float64 = (j + 1) / den
 
                 prx = np.power(1 - b2, n) - np.power(1 - b1, n)
                 pry = np.power(1 - b2, m) - np.power(1 - b1, m)
