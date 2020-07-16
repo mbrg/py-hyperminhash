@@ -5,19 +5,8 @@ import pytest
 import numpy as np
 import string
 
+from hyperminhash.perf import estimate_error
 from hyperminhash.hyperminhash import HyperMinHash
-
-
-def estimate_error(got, exp: int) -> float:
-	if got == exp == 0:
-		return 0.0
-
-	if got > exp:
-		delta = got - exp
-	else:
-		delta = exp - got
-
-	return 100 * delta / exp
 
 
 def rnd_str(size: int):
