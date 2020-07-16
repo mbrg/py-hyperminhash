@@ -32,6 +32,8 @@ class HyperMinHash:
         :param q: number of bits for the LogLog hash
         :param r: number of bits for the bbit hash
         """
+        assert p - r >= 0
+
         self.p = p
         self.q = q
         self.r = r
