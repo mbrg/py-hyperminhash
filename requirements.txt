@@ -3,3 +3,4 @@ pytest-xdist
 numpy
 cached-property
 tqdm
+pandas
