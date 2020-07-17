@@ -2,3 +2,4 @@ metrohash-python
 pytest-xdist
 numpy
 cached-property
+tqdm
