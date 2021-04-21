@@ -1,7 +1,5 @@
 # HyperMinHash
 
-![Build Status](https://travis-ci.org/mibarg/py-hyperminhash.svg?branch=master)
-
 This repository is a Python>=3.6 port of golang [hyperminhash](https://github.com/axiomhq/hyperminhash):
 
 > Besides being a compact and pretty speedy HyperLogLog implementation for cardinality counting, this modified HyperLogLog allows **intersection** and **similarity** estimation of different HyperLogLogs.
